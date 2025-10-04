@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -60,10 +61,33 @@
                 @apply hover:shadow-lg hover:-translate-y-1 transition-custom;
             }
             .theme-toggle-btn {
-                @apply relative w-10 h-5 rounded-full transition-colors duration-300 ease-in-out cursor-pointer;
+                @apply relative w-10 h-5 rounded-full transition-colors duration-500 ease-in-out cursor-pointer overflow-hidden;
             }
             .theme-toggle-dot {
-                @apply absolute left-0.5 top-0.5 bg-white w-4 h-4 rounded-full transition-transform duration-300 ease-in-out;
+                @apply absolute left-0.5 top-0.5 bg-white w-4 h-4 rounded-full transition-transform duration-500 ease-out;
+            }
+            .theme-toggle-btn::before {
+                content: '';
+                @apply absolute inset-0 bg-gradient-to-r from-blue-400 to-indigo-600 opacity-0 dark:opacity-100 transition-opacity duration-300;
+            }
+            .sun-icon {
+                @apply absolute left-1 top-1 text-yellow-500 dark:opacity-0 transition-all duration-300 ease-in-out transform origin-center;
+            }
+            .moon-icon {
+                @apply absolute right-1 top-1 text-blue-300 opacity-0 dark:opacity-100 transition-all duration-300 ease-in-out transform origin-center;
+            }
+            .dark .sun-icon {
+                transform: rotate(-90deg);
+            }
+            .dark .moon-icon {
+                transform: rotate(90deg);
+            }
+            .theme-toggle-btn:active .theme-toggle-dot {
+                @apply scale-110;
+            }
+            .theme-toggle-dot::after {
+                content: '';
+                @apply absolute inset-0 bg-white/20 rounded-full animate-ping opacity-30;
             }
             .region-btn {
                 @apply w-full py-3 px-4 rounded-lg font-medium text-left card-hover flex items-center transition-custom;
@@ -84,13 +108,15 @@
             </h1>
             <div class="flex items-center gap-4">
                 <!-- 日夜模式切换按钮 -->
-                <div id="theme-toggle" class="theme-toggle-btn bg-gray-300 dark:bg-primary">
+                <div id="theme-toggle" class="theme-toggle-btn bg-gray-300 dark:bg-primary group">
                     <div class="theme-toggle-dot transform dark:translate-x-5"></div>
-                    <i class="fa fa-sun-o absolute left-1 top-1 text-yellow-500 dark:opacity-0 transition-opacity"></i>
-                    <i class="fa fa-moon-o absolute right-1 top-1 text-blue-300 opacity-0 dark:opacity-100 transition-opacity"></i>
+                    <i class="fa fa-sun-o sun-icon"></i>
+                    <i class="fa fa-moon-o moon-icon"></i>
+                    <!-- 光晕效果 -->
+                    <div class="absolute -inset-2 bg-yellow-400 rounded-full blur opacity-0 dark:opacity-20 transition-opacity duration-300 ease-in-out"></div>
                 </div>
                 <span class="hidden md:inline-block text-sm text-gray-500 dark:text-gray-400">
-                    日/夜间模式切换
+                    日/夜间模式切换按钮
                 </span>
             </div>
         </div>
@@ -104,13 +130,16 @@
                     <i class="fa fa-file-text-o mr-2 w-5 text-center"></i> 剧本内容
                 </button>
                 <button id="cast-btn" class="region-btn w-full py-3 px-4 rounded-lg bg-gray-200 dark:bg-gray-700 font-medium text-left card-hover flex items-center">
-                    <i class="fa fa-users mr-2 w-5 text-center"></i> 演职员表
+                    <i class="fa fa-users mr-2 w-5 text-center"></i> 演职人员
                 </button>
                 <button id="log-btn" class="region-btn w-full py-3 px-4 rounded-lg bg-gray-200 dark:bg-gray-700 font-medium text-left card-hover flex items-center">
                     <i class="fa fa-history mr-2 w-5 text-center"></i> 调整日志
                 </button>
+                <button id="update-log-btn" class="region-btn w-full py-3 px-4 rounded-lg bg-gray-200 dark:bg-gray-700 font-medium text-left card-hover flex items-center">
+                    <i class="fa fa-refresh mr-2 w-5 text-center"></i> 站更日志
+                </button>
                 <p class="text-gray-400 dark:text-gray-500 text-sm">网站制作者：王浩平</p>
-                <p class="text-gray-400 dark:text-gray-500 text-sm">当前网站版本：1.0</p>
+                <p class="text-gray-400 dark:text-gray-500 text-sm">当前网站版本：1.1</p>
             </div>
         </div>
 
@@ -120,7 +149,7 @@
             <section id="script-region" class="region-content animate-fade-in">
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 md:p-8 mb-8">
                     <h2 class="text-2xl font-bold mb-6 text-primary dark:text-primary border-b border-gray-200 dark:border-gray-700 pb-3">
-                        如何缔造环保为常的世界 - 完整剧本
+                        如何缔造环保为常的世界
                     </h2>
                     
                     <!-- 剧本分段展示 -->
@@ -194,7 +223,7 @@
                                         
                                         <!-- 人物动作 -->
                                         <div class="bg-secondary/10 dark:bg-secondary/20 border-l-4 border-secondary p-3 rounded-r-lg mb-4">
-                                            <p class="font-medium text-secondary dark:text-secondary">人物举动：走到一个地方，将易拉罐拿起，走到桌前，将其放到桌上，自己坐在边上</p>
+                                            <p class="font-medium text-secondary dark:text-secondary">人物举动：走到一个地方，将塑料瓶拿起，走到桌前，将其放到桌上，自己坐在边上</p>
                                         </div>
 
                                         <p class="font-medium text-gray-900 dark:text-gray-100 mb-2">参演者1(奕辰)：</p>
@@ -205,12 +234,12 @@
                                     <div class="mb-4">
                                         <!-- 人物动作 -->
                                         <div class="bg-secondary/10 dark:bg-secondary/20 border-l-4 border-secondary p-3 rounded-r-lg mb-4">
-                                            <p class="font-medium text-secondary dark:text-secondary">人物举动：拿起易拉罐，端详了下，对着拍摄设备说</p>
+                                            <p class="font-medium text-secondary dark:text-secondary">人物举动：拿起塑料瓶，端详了下，对着拍摄设备说</p>
                                         </div>
 
                                         <p class="font-medium text-gray-900 dark:text-gray-100 mb-2">参演者1(奕辰)：</p>
-                                        <p class="text-gray-700 dark:text-gray-300 mb-3">易拉罐这玩意儿，想必大家喝完罐装饮料就会将其随手扔进可回收垃圾桶吧，虽然这确实是易拉罐最科学、最经济、最环保的归宿，但，我们可以通过个人手工创意，让它在生活中也有实用之地。</p>
-                                        <p class="text-gray-400 dark:text-gray-500 text-sm italic">Beverage cans, more often than not, are tossed straight into the recycling bin once the drink is finished. Although this is unquestionably the most scientific, economical and environmentally sound destination for them, a little individual ingenuity can still turn them into genuinely useful items in everyday life.</p>
+                                        <p class="text-gray-700 dark:text-gray-300 mb-3">塑料瓶这玩意儿，想必大家喝完瓶装水就会将其随手扔进可回收垃圾桶吧，虽然这确实是塑料瓶最科学、最经济、最环保的归宿，但，我们可以通过个人手工创意，让它在生活中也有实用之地。</p>
+                                        <p class="text-gray-400 dark:text-gray-500 text-sm italic">Plastic bottles, more often than not, are tossed straight into the recycling bin once the drink is finished. Although this is unquestionably the most scientific, economical and environmentally sound destination for them, a little individual ingenuity can still turn them into genuinely useful items in everyday life.</p>
                                     </div>
 
                                     <div class="mb-4">
@@ -231,8 +260,8 @@
                                         </div>
 
                                         <p class="font-medium text-gray-900 dark:text-gray-100 mb-2">参演者1(奕辰)：</p>
-                                        <p class="text-gray-700 dark:text-gray-300 mb-3">以同样的步骤再做个笔筒，这里我直接用刚做好的。然后给底部插几个窟窿，作为排水口。那么恭喜你，你拥有了一个小花盆。然后对于罐身我们也可以进行个性定制。</p>
-                                        <p class="text-gray-400 dark:text-gray-500 text-sm italic">Make another one the same way (I'll use this one). Just add some drainage holes in the bottom, and ta-da! You now have a small flower pot! You can also personalize the body of the can.</p>
+                                        <p class="text-gray-700 dark:text-gray-300 mb-3">以同样的步骤再做个笔筒，这里我直接用刚做好的。然后给底部插几个窟窿，作为排水口。那么恭喜你，你拥有了一个小花盆。然后对于瓶身我们也可以进行个性定制。</p>
+                                        <p class="text-gray-400 dark:text-gray-500 text-sm italic">Make another one the same way (I'll use this one). Just add some drainage holes in the bottom, and ta-da! You now have a small flower pot! You can also personalize the body of the bottle.</p>
                                     </div>
 
                                     <div class="mb-4">
@@ -245,12 +274,12 @@
 
                                         <!-- 人物动作 -->
                                         <div class="bg-secondary/10 dark:bg-secondary/20 border-l-4 border-secondary p-3 rounded-r-lg mb-4">
-                                            <p class="font-medium text-secondary dark:text-secondary">人物举动：坐在电脑面前（或用手机，可借助父母的）假装搜索易拉罐手工创意相关方法，说到“最好带上手套”，就拍一个摄像设备对着手戴手套的动作</p>
+                                            <p class="font-medium text-secondary dark:text-secondary">人物举动：坐在电脑面前（或用手机，可借助父母的）假装搜索塑料瓶手工创意相关方法，说到“最好带上手套”，就拍一个摄像设备对着手戴手套的动作</p>
                                         </div>
 
                                         <p class="font-medium text-gray-900 dark:text-gray-100 mb-2">参演者1(奕辰)：</p>
-                                        <p class="text-gray-700 dark:text-gray-300 mb-3">易拉罐还有很多用途，现在科技发达，相关方法我们在家通过互联网就能找到。但记住对易拉罐进行个人手工创意时，最好带上手套，因为你剪掉它某部分后，缺陷处边缘都很锋利的，一不小心就容易伤到手，带上手套就不会了，这相当于一个自保措施。</p>
-                                        <p class="text-gray-400 dark:text-gray-500 text-sm italic">There are manymoreuses for aluminum cans. With today'stechnology, you can easily find ideas online. But remember, when doing these DIY projects, it's best to wear gloves. The edges can become very sharp after cutting and can easilycut your hand. Gloves are a simple safety precaution.</p>
+                                        <p class="text-gray-700 dark:text-gray-300 mb-3">塑料瓶还有很多用途，现在科技发达，相关方法我们在家通过互联网就能找到。但记住对塑料瓶进行个人手工创意时，最好带上手套，因为你剪掉它某部分后，边缘可能会有毛刺，一不小心就容易伤到手，带上手套就不会了，这相当于一个自保措施。</p>
+                                        <p class="text-gray-400 dark:text-gray-500 text-sm italic">There are many more uses for plastic bottles. With today's technology, you can easily find ideas online. But remember, when doing these DIY projects, it's best to wear gloves. The edges can have sharp burrs after cutting and can easily scratch your hand. Gloves are a simple safety precaution.</p>
                                     </div>
 
                                     <div class="mb-4">
@@ -507,7 +536,7 @@
             <section id="cast-region" class="region-content hidden animate-fade-in">
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 md:p-8 mb-8">
                     <h2 class="text-2xl font-bold mb-6 text-primary dark:text-primary border-b border-gray-200 dark:border-gray-700 pb-3">
-                        演职员表
+                        演职人员表
                     </h2>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -655,7 +684,7 @@
                         <!-- 日志条目 -->
                         <div class="log-entry border-l-4 border-primary pl-5 py-1">
                             <div class="flex flex-wrap items-center justify-between mb-2">
-                                <h3 class="font-bold text-lg">第一版剧本撰写完成</h3>
+                                <h3 class="font-bold text-lg">剧本初步撰写完成</h3>
                                 <span class="text-gray-500 dark:text-gray-400 text-sm bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full mt-2 md:mt-0">
                                     <i class="fa fa-calendar-o mr-1"></i> 2025年9月27日
                                 </span>
@@ -673,18 +702,95 @@
 
                     <div class="log-entry border-l-4 border-primary pl-5 py-1">
                             <div class="flex flex-wrap items-center justify-between mb-2">
-                                <h3 class="font-bold text-lg">第一版剧本定稿</h3>
+                                <h3 class="font-bold text-lg">心理情景剧剧本定稿</h3>
                                 <span class="text-gray-500 dark:text-gray-400 text-sm bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full mt-2 md:mt-0">
                                     <i class="fa fa-calendar-o mr-1"></i> 2025年9月30日
                                 </span>
                             </div>
                             <div class="space-y-3 text-gray-700 dark:text-gray-300">
-                                <p>确定剧本为最终版剧本，进一步对剧本进行了语句优化。</p>
+                                <p>经一致意见，确定初版剧本为最终版剧本，进一步对剧本进行了语句优化。</p>
+                            </div>
+                    </div>
+
+                    <div class="log-entry border-l-4 border-primary pl-5 py-1">
+                            <div class="flex flex-wrap items-center justify-between mb-2">
+                                <h3 class="font-bold text-lg">剧本情景所需物调整</h3>
+                                <span class="text-gray-500 dark:text-gray-400 text-sm bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full mt-2 md:mt-0">
+                                    <i class="fa fa-calendar-o mr-1"></i> 2025年10月5日
+                                </span>
+                            </div>
+                            <div class="space-y-3 text-gray-700 dark:text-gray-300">
+                                <p>调整了剧本所需物（奕辰部分），调整难以剪的易拉罐为塑料瓶。</p>
                             </div>
                     </div>
                 </div>
             </section>
+
+            <!-- 站更日志区域（默认隐藏） -->
+            <section id="update-log-region" class="region-content hidden animate-fade-in">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 md:p-8 mb-8">
+                    <h2 class="text-2xl font-bold mb-6 text-primary dark:text-primary border-b border-gray-200 dark:border-gray-700 pb-3">
+                        网站版本更新日志
+                    </h2>
+                    
+                    <div class="space-y-8">
+                        <!-- 版本1.1 -->
+                        <div class="update-timeline relative pl-8 pb-8">
+                            <!-- 时间轴点 -->
+                            <div class="absolute left-0 top-0 w-4 h-4 rounded-full bg-primary border-4 border-primary/20"></div>
+                            <!-- 时间轴线 -->
+                            <div class="absolute left-2 top-4 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-700"></div>
+                            
+                            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-5">
+                                <div class="flex flex-wrap items-center justify-between mb-3">
+                                    <h3 class="font-bold text-lg text-primary">版本 1.1</h3>
+                                    <span class="text-gray-500 dark:text-gray-400 text-sm bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full mt-2 md:mt-0">
+                                        <i class="fa fa-calendar-o mr-1"></i> 2025年10月5日
+                                    </span>
+                                </div>
+                                
+                                <div class="space-y-3 text-gray-700 dark:text-gray-300">
+                                    <h4 class="font-semibold">主要更新内容：</h4>
+                                    <ul class="list-disc pl-6 space-y-2">
+                                        <li>新增站更日志功能，支持时间轴形式展示版本更新历史</li>
+                                        <li>加入剧本试读音乐，分中英版本</li>
+                                        <li>对夜间模式按钮样式进行了小调整</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 版本1.0 -->
+                        <div class="update-timeline relative pl-8">
+                            <!-- 时间轴点 -->
+                            <div class="absolute left-0 top-0 w-4 h-4 rounded-full bg-primary border-4 border-primary/20"></div>
+                            
+                            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-5">
+                                <div class="flex flex-wrap items-center justify-between mb-3">
+                                    <h3 class="font-bold text-lg text-primary">版本 1.0</h3>
+                                    <span class="text-gray-500 dark:text-gray-400 text-sm bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full mt-2 md:mt-0">
+                                        <i class="fa fa-calendar-o mr-1"></i> 2025年9月27日
+                                    </span>
+                                </div>
+                                
+                                <div class="space-y-3 text-gray-700 dark:text-gray-300">
+                                    <h4 class="font-semibold">主要更新内容：</h4>
+                                    <ul class="list-disc pl-6 space-y-2">
+                                        <li>网站正式上线，包含剧本内容展示功能</li>
+                                        <li>实现演职人员信息展示</li>
+                                        <li>添加剧本调整日志记录</li>
+                                        <li>支持日夜模式切换</li>
+                                        <li>响应式设计，适配不同设备屏幕</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </div>
+
+
     </main>
 
     <!-- 页脚 -->
@@ -771,5 +877,4 @@
         });
     </script>
 </body>
-
 </html>
