@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -16,8 +17,8 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: '#2563eb',    // 主色调：蓝色（环保主题）
-                        secondary: '#f59e0b',  // 辅助色：橙色（突出动作）
+                        primary: '#2563eb',    // 主色调：蓝色
+                        secondary: '#f59e0b',  // 辅助色：橙色
                         dark: '#1e293b',       // 深色模式背景
                         light: '#f8fafc',      // 浅色模式背景
                         clip: '#0f172a'        // 剪辑要求背景色
@@ -54,6 +55,10 @@
             .content-auto {
                 content-visibility: auto;
             }
+            .title-container { /* 标题行的父容器 */
+  display: flex;
+  align-items: center; /* 强制图标和文字垂直居中 */
+}
             .text-shadow {
                 text-shadow: 0 2px 4px rgba(0,0,0,0.1);
             }
@@ -100,10 +105,74 @@
             .region-btn.active {
                 @apply bg-primary text-white;
             }
+            .music-toggle-btn {
+                @apply relative w-10 h-10 rounded-full transition-all duration-300 ease-in-out flex items-center justify-center;
+            }
+            .music-toggle-btn:hover {
+                transform: scale(1.05);
+            }
+            .music-toggle-btn.playing {
+                animation: musicPulse 2s ease-in-out infinite;
+            }
+            @keyframes musicPulse {
+                0%, 100% { 
+                    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4);
+                    transform: scale(1);
+                }
+                50% { 
+                    box-shadow: 0 0 0 8px rgba(37, 99, 235, 0);
+                    transform: scale(1.05);
+                }
+            }
+            .music-player-visible {
+                opacity: 1 !important;
+                pointer-events: auto !important;
+            }
+            .music-progress-bar {
+                @apply bg-gray-200 dark:bg-gray-700 rounded-full h-2 relative overflow-hidden;
+            }
+            .music-progress-fill {
+                @apply bg-primary h-full rounded-full transition-all duration-300 relative;
+            }
+            .music-progress-fill::after {
+                content: '';
+                @apply absolute right-0 top-1/2 transform translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-md;
+            }
+            .read-btn {
+                position: relative;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            .read-btn:hover {
+                transform: translateY(-1px);
+            }
+            .read-btn.active {
+                background-color: rgb(37, 99, 235) !important;
+                color: white !important;
+                box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+                transform: translateY(-1px);
+            }
+            .dark .read-btn.active {
+                background-color: rgb(59, 130, 246) !important;
+                box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            }
+            #read-toggle {
+                transition: all 0.3s ease-in-out;
+                animation: slideIn 0.3s ease-out;
+            }
+            @keyframes slideIn {
+                from {
+                    opacity: 0;
+                    transform: translateX(-10px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateX(0);
+                }
+            }
         }
     </style>
 </head>
-<body class="bg-light dark:bg-dark text-gray-800 dark:text-gray-200 min-h-screen flex flex-col transition-custom">
+<body class="bg-light dark:bg-dark text-gray-800 dark:text-gray-200 min-h-screen flex flex-col">
     <!-- 顶部导航栏 -->
     <header class="sticky top-0 z-50 bg-white/90 dark:bg-dark/90 backdrop-blur-sm shadow-sm transition-custom">
         <div class="container mx-auto px-4 py-4 flex justify-between items-center">
@@ -112,6 +181,27 @@
                 心理情景剧剧本库
             </h1>
             <div class="flex items-center gap-4">
+                <!-- 音乐播放按钮 -->
+                <button id="music-toggle" class="relative w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-all duration-300 ease-in-out group flex items-center justify-center">
+                    <i class="fa fa-music text-gray-600 dark:text-gray-300 group-hover:text-primary dark:group-hover:text-primary transition-colors duration-300"></i>
+                    <!-- 播放状态指示器 -->
+                    <div id="music-status-indicator" class="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-green-500 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                        <div class="w-full h-full rounded-full bg-green-500 animate-ping"></div>
+                    </div>
+                </button>
+                
+                <!-- 中英朗读按钮 -->
+                <div id="read-toggle" class="hidden">
+                    <div class="flex bg-gray-200 dark:bg-gray-700 rounded-lg p-1 transition-all duration-300 ease-in-out">
+                        <button id="chinese-read-btn" class="read-btn px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm">
+                            中
+                        </button>
+                        <button id="english-read-btn" class="read-btn px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100">
+                            英
+                        </button>
+                    </div>
+                </div>
+                
                 <!-- 日夜模式切换按钮 -->
                 <div id="theme-toggle" class="theme-toggle-btn bg-gray-300 dark:bg-primary group cursor-pointer">
                     <div class="theme-toggle-dot transform dark:translate-x-5 transition-transform duration-500 ease-out"></div>
@@ -143,8 +233,11 @@
                 <button id="update-log-btn" class="region-btn w-full py-3 px-4 rounded-lg bg-gray-200 dark:bg-gray-700 font-medium text-left card-hover flex items-center">
                     <i class="fa fa-refresh mr-2 w-5 text-center"></i> 站更日志
                 </button>
+                <button id="attachment-btn" class="region-btn w-full py-3 px-4 rounded-lg bg-gray-200 dark:bg-gray-700 font-medium text-left card-hover flex items-center">
+                    <i class="fa fa-paperclip mr-2 w-5 text-center"></i> 心剧附件
+                </button>
                 <p class="text-gray-400 dark:text-gray-500 text-sm">网站制作者：王浩平</p>
-                <p class="text-gray-400 dark:text-gray-500 text-sm">当前网站版本：1.2</p>
+                <p class="text-gray-400 dark:text-gray-500 text-sm">当前网站版本：1.3</p>
             </div>
         </div>
 
@@ -153,13 +246,419 @@
             <!-- 剧本内容区域（默认显示） -->
             <section id="script-region" class="region-content animate-fade-in">
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 md:p-8 mb-8 transform transition-custom hover:shadow-lg" style="transform: translateZ(0);">
-                    <div class="min-h-[50vh] flex items-center justify-center">
-                        <div class="text-center bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg p-8 md:p-10 max-w-md mx-auto animate-slide-up">
-                            <div class="flex justify-center mb-3">
-                                <i class="fa fa-exclamation-circle text-primary text-2xl animate-pulse-slow"></i>
+                    <h2 class="text-2xl font-bold mb-2 text-primary dark:text-primary border-b border-gray-200 dark:border-gray-700 pb-3">
+                        从零开始的心理认知拓展录
+                        <span class="block text-sm text-primary dark:text-primary mt-1">Zero to Insight: A Mental Odyssey</span>
+                    </h2>
+                    
+                    <!-- 剧本分段展示 -->
+                    <div class="space-y-8">
+                        <!-- 特例说明 -->
+                        <div class="script-section">
+                            <h3 class="text-2xl font-semibold mb-4 flex items-center">
+                                <span class="inline-block w-8 h-8 rounded-lg bg-primary/10 dark:bg-primary/20 text-primary flex items-center justify-center mr-2 overflow-hidden">
+                                    <i class="fa fa-info"></i>
+                                </span>
+                                特例说明
+                            </h3>
+                            <div class="pl-10 space-y-3">
+                                <p class="text-gray-700 dark:text-gray-300">英文部分是中英双语字幕的英文文案，无需作为阅读内容</p>
+                                <p class="text-gray-700 dark:text-gray-300">黑色突出显示是剪辑要求，黄色突出显示是人物举动或注脚部分</p>
+                                <p class="text-gray-700 dark:text-gray-300">默认拍摄方式都是横版视角，设备不限，可摄像机也可常用电子设备</p>
                             </div>
-                            <h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">待剧本调整与更换</h3>
-                            <p class="text-sm text-gray-600 dark:text-gray-300">当前剧本内容已清空，后续将根据最新安排进行更新与替换。</p>
+                        </div>
+
+                        <!-- 正片部分 -->
+                        <div class="script-section">
+                            <h3 class="text-2xl font-semibold mb-4 flex items-center">
+                                <span class="inline-block w-8 h-8 rounded-lg bg-primary/10 dark:bg-primary/20 text-primary flex items-center justify-center mr-2 overflow-hidden">
+                                    <!-- 使用胶卷图标替代相片图标 -->
+                                    <i class="fa fa-film"></i>
+                                </span>
+                                正片部分
+                            </h3>
+                            <div class="pl-10 space-y-6">
+                                <!-- 开场引导旁白 -->
+                                 <div class="script-block">
+                                    <p class="font-medium text-gray-900 dark:text-gray-100 mb-2">旁白(浩平)：</p>
+                                    <p class="text-gray-700 dark:text-gray-300 mb-3">可曾有过对"心理"的深入了解？没有？那么恭喜，你窥见了这部短片。</p>
+                                    <p class="text-gray-400 dark:text-gray-500 text-sm italic">Have you ever had an in-depth understanding of "psychology"? No? Then congratulations, you've caught a glimpse of this short film.</p>
+                                </div>
+                                <div class="script-block">
+                                    <p class="font-medium text-gray-900 dark:text-gray-100 mb-2">旁白(浩平)：</p>
+                                    <p class="text-gray-700 dark:text-gray-300 mb-3">相信你肯定疑惑我为什么会说"恭喜"，因为这部短片如果你全程全神贯注地看了，那么你对"心理"的层面认知，定会有一定程度上的扩大。</p>
+                                    <p class="text-gray-400 dark:text-gray-500 text-sm italic">I'm sure you're wondering why I said "congratulations", because if you watch this short film with full attention from start to finish, your cognitive level of "psychology" will surely be expanded to a certain extent.</p>
+                                </div>
+                                <div class="script-block">
+                                    <p class="font-medium text-gray-900 dark:text-gray-100 mb-2">旁白(浩平)：</p>
+                                    <p class="text-gray-700 dark:text-gray-300 mb-3">所以屏息凝神，短片就要开幕了。</p>
+                                    <p class="text-gray-400 dark:text-gray-500 text-sm italic">So hold your breath and focus— the short film is about to start.</p>
+                                </div>
+
+                                <!-- 旁白内容 -->
+                                <div class="script-block">
+                                    <div class="mb-4">
+                                        <!-- 剪辑要求 -->
+                                        <div class="bg-clip text-white p-3 rounded-lg mb-4">
+                                            <p class="font-medium flex items-center">
+                                                <i class="fa fa-scissors mr-2"></i> 剪辑要求：画面渐显，"心理的基本层面讲解"标题淡入然后淡出，画面最后出现车水马龙插入视频
+                                            </p>
+                                        </div>
+                                        
+                                        <!-- 人物动作 -->
+                                        <div class="bg-secondary/10 dark:bg-secondary/20 border-l-4 border-secondary p-3 rounded-r-lg mb-4">
+                                            <p class="font-medium text-secondary dark:text-secondary">人物举动：张雨霆拍摄自己用手轻放于自己心脏位置上面，说到"人脑"就用手单指点点自己的头，镜头要求拍不到人脸</p>
+                                        </div>
+
+                                        <p class="font-medium text-gray-900 dark:text-gray-100 mb-2">旁白(浩平)：</p>
+                                        <p class="text-gray-700 dark:text-gray-300 mb-3">首先，我们要明确"心理"的核心定义。从科学角度来说，心理是人脑对客观现实的主观反映，它并非看不见摸不着的抽象概念，而是贯穿我们日常言行的真实存在。</p>
+                                        <!-- 英文内容（浅色） -->
+                                        <p class="text-gray-400 dark:text-gray-500 text-sm italic">First of all, we need to clarify the core definition of "psychology". From a scientific perspective, psychology is the subjective reflection of objective reality by the human brain. It is not an abstract concept that cannot be seen or touched, but a real existence that runs through our daily words and deeds.</p>
+                                    </div>
+                                </div>
+
+                                <!-- 旁白2 -->
+                                <div class="script-block">
+                                    <div class="mb-4">
+                                        <!-- 剪辑要求 -->
+                                        <div class="bg-clip text-white p-3 rounded-lg mb-4">
+                                            <p class="font-medium flex items-center">
+                                                <i class="fa fa-scissors mr-2"></i> 剪辑要求：画面渐隐，然后渐显一个淡红色背景，逐渐出现"外界刺激→大脑处理→行为反应"的流程示意图，搭配轻快的卡点音效
+                                            </p>
+                                        </div>
+
+                                        <p class="font-medium text-gray-900 dark:text-gray-100 mb-2">旁白(浩平)：</p>
+                                        <p class="text-gray-700 dark:text-gray-300 mb-3">简单来说，你看到美景时的愉悦、遇到困难时的焦虑、做出选择时的犹豫，这些情绪与思考的瞬间，都是心理活动的具体体现。</p>
+                                        <p class="text-gray-400 dark:text-gray-500 text-sm italic">In simple terms, the joy when you see beautiful scenery, the anxiety when you encounter difficulties, the hesitation when making choices—these moments of emotion and thinking are all specific manifestations of psychological activities.</p>
+                                    </div>
+                                </div>
+
+                                <!-- 张雨霆场景 -->
+                                <div class="script-block">
+                                    <div class="mb-4">
+                                        <!-- 剪辑要求 -->
+                                        <div class="bg-clip text-white p-3 rounded-lg mb-4">
+                                            <p class="font-medium flex items-center">
+                                                <i class="fa fa-scissors mr-2"></i> 剪辑要求：清空前面内容，画面中有为三个小窗口，分别展示"情绪""认知""行为"三个关键词及对应的简易图标（心跳图标代表情绪、大脑图标代表认知、脚步图标代表行为）和底层文字，小窗口随读到拿了依次出现（PPT实现）
+                                            </p>
+                                        </div>
+
+                                        <p class="font-medium text-gray-900 dark:text-gray-100 mb-2">参演者1(张雨霆)：</p>
+                                        <p class="text-gray-700 dark:text-gray-300 mb-3">心理的基本层面主要包含三大核心：一是情绪体验，即我们对外界事物产生的喜怒哀乐；二是认知过程，包括感知、记忆、思维等心理操作；三是行为倾向，也就是心理活动驱动下的具体行动。</p>
+                                        <p class="text-gray-400 dark:text-gray-500 text-sm italic">The basic level of psychology mainly includes three core aspects: first, emotional experience, which is the joy, anger, sorrow and joy we have towards external things; second, cognitive process, including psychological operations such as perception, memory and thinking; third, behavioral tendency, that is, specific actions driven by psychological activities.</p>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <!-- 剪辑要求 -->
+                                        <div class="bg-clip text-white p-3 rounded-lg mb-4">
+                                            <p class="font-medium flex items-center">
+                                                <i class="fa fa-scissors mr-2"></i> 剪辑要求：（PPT 切页）三个小窗口合并变为思维导图，关键词与图标组成完整的"心理基本层面"总结图
+                                            </p>
+                                        </div>
+
+                                        <p class="font-medium text-gray-900 dark:text-gray-100 mb-2">参演者1(张雨霆)：</p>
+                                        <p class="text-gray-700 dark:text-gray-300 mb-3">这就是心理最基础的构成框架，理解了这些，我们就迈出了深入探索心理世界的第一步。接下来，让我们走进更具体的心理现象。</p>
+                                        <p class="text-gray-400 dark:text-gray-500 text-sm italic">This is the most basic framework of psychology. Understanding these, we have taken the first step towards in-depth exploration of the psychological world. Next, let's walk into more specific psychological phenomena.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 具体层面讲解 -->
+                        <div class="script-section">
+                            <div class="pl-10 space-y-8">
+                                <!-- 李奕辰场景 -->
+                                <div class="script-block">
+                                    <p class="font-medium text-gray-900 dark:text-gray-100 mb-2">参演者2(李奕辰)：</p>
+                                    <p class="text-gray-700 dark:text-gray-300 mb-3">情绪与心理息息相关，生活中诸多常见场景里的情绪反应，都藏着内在的心理逻辑与需求。</p>
+                                    <p class="text-gray-400 dark:text-gray-500 text-sm italic">Emotions are closely related to psychology. Emotional reactions in many common life scenarios hide underlying psychological logic and needs.</p>
+                                </div>
+
+                                <div class="script-block">
+                                    <p class="font-medium text-gray-900 dark:text-gray-100 mb-2">参演者2(李奕辰)：</p>
+                                    <p class="text-gray-700 dark:text-gray-300 mb-3">比方拿一个我们最熟悉的来说，玩家在抽自己喜欢的角色时，往往都会掩饰不住内心的激动，这就是玩家对心仪角色情感投射与心理满足感的具象化体现。</p>
+                                    <p class="text-gray-400 dark:text-gray-500 text-sm italic">Take one of the most familiar examples: when players draw their favorite characters, they often can't hide their excitement. This is a concrete manifestation of players' emotional projection and psychological satisfaction towards the desired characters.</p>
+                                </div>
+
+                                <!-- 王浩平场景 -->
+                                <div class="script-block">
+                                    <p class="font-medium text-gray-900 dark:text-gray-100 mb-2">参演者3(王浩平)：</p>
+                                    <p class="text-gray-700 dark:text-gray-300 mb-3">外卖都点过吧？送达虽是常态，但当我们的外卖超时送达或被别人偷走时，"愤怒"是最具备首要情绪高概率的展现。</p>
+                                    <p class="text-gray-400 dark:text-gray-500 text-sm italic">Everyone has ordered takeout, right? Timely delivery is the norm, but when our takeout is delivered late or stolen by others, "anger" is the most likely primary emotion to show.</p>
+                                </div>
+
+                                <!-- 董正耀场景 -->
+                                <div class="script-block">
+                                    <div class="mb-4">
+                                        <!-- 剪辑要求 -->
+                                        <div class="bg-clip text-white p-3 rounded-lg mb-4">
+                                            <p class="font-medium flex items-center">
+                                                <i class="fa fa-scissors mr-2"></i> 剪辑要求：展示一些旅游视频，每个都剪短一点
+                                            </p>
+                                        </div>
+
+                                        <p class="font-medium text-gray-900 dark:text-gray-100 mb-2">参演者4(董正耀)：</p>
+                                        <p class="text-gray-700 dark:text-gray-300 mb-3">我没事的时候，就喜欢远走高飞，去见识更广阔的世界。</p>
+                                        <p class="text-gray-400 dark:text-gray-500 text-sm italic">When I'm free, I love to go far and wide to see the broader world.</p>
+                                    </div>
+                                </div>
+
+                                <!-- 王浩平场景2 -->
+                                <div class="script-block">
+                                    <div class="mb-4">
+                                        <!-- 剪辑要求 -->
+                                        <div class="bg-clip text-white p-3 rounded-lg mb-4">
+                                            <p class="font-medium flex items-center">
+                                                <i class="fa fa-scissors mr-2"></i> 剪辑要求：展示一些照片，每个都占时长少一点
+                                            </p>
+                                        </div>
+
+                                        <p class="font-medium text-gray-900 dark:text-gray-100 mb-2">旁白(王浩平)：</p>
+                                        <p class="text-gray-700 dark:text-gray-300 mb-3">我也并非常年宅家，反倒去过很多地方旅行。</p>
+                                        <p class="text-gray-400 dark:text-gray-500 text-sm italic">I don't stay at home all year round; on the contrary, I have traveled to many places.</p>
+                                    </div>
+                                </div>
+
+                                <!-- 王浩平天安门场景 -->
+                                <div class="script-block">
+                                    <div class="mb-4">
+                                        <!-- 剪辑要求 -->
+                                        <div class="bg-clip text-white p-3 rounded-lg mb-4">
+                                            <p class="font-medium flex items-center">
+                                                <i class="fa fa-scissors mr-2"></i> 剪辑要求：先展示天安门前长安街经过视频，大概到 3 秒时候停住，将关键帧做成图片拉长占据时长，配合人物说的话直至话止时候照片占用时间长度不再增加
+                                            </p>
+                                        </div>
+
+                                        <p class="font-medium text-gray-900 dark:text-gray-100 mb-2">旁白(王浩平)：</p>
+                                        <p class="text-gray-700 dark:text-gray-300 mb-3">而当你看到这幅画面时，不妨猜猜，我此刻的内心会是怎样，自豪、兴奋、激动、喜悦？其实都不是，而是满足，当然，也有自豪的一部分，生在中国，生在北京，我感觉这就算一种自豪。</p>
+                                        <p class="text-gray-400 dark:text-gray-500 text-sm italic">Looking at this scene, guess what I'm feeling right now—pride, excitement, thrill, joy? Actually, none of these. It's contentment. Of course, there's also a touch of pride. Being born in China, and in Beijing, I think that in itself is a kind of pride.</p>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <!-- 剪辑要求 -->
+                                        <div class="bg-clip text-white p-3 rounded-lg mb-4">
+                                            <p class="font-medium flex items-center">
+                                                <i class="fa fa-scissors mr-2"></i> 剪辑要求：关于拍天安门的照片全加上，每张的时长占用基本一样，能一直说到话完即可
+                                            </p>
+                                        </div>
+
+                                        <p class="font-medium text-gray-900 dark:text-gray-100 mb-2">旁白(王浩平)：</p>
+                                        <p class="text-gray-700 dark:text-gray-300 mb-3">去天安门不是难事，正如我姑父所言"想看随时可以去看"，但这个"随时"是受个人实际空闲时间多少而定，可现实里，这种'随时'总被忙碌的生活打乱，想出发却抽不出时间的纠结，慢慢就会催生一种情绪——焦躁。</p>
+                                        <p class="text-gray-400 dark:text-gray-500 text-sm italic">Visiting Tiananmen isn't difficult. As my uncle said, "You can go whenever you want to see it." But this "whenever" depends on how much free time you actually have. In reality, however, this "whenever" is always disrupted by a busy life. The dilemma of wanting to go but being unable to spare the time gradually gives rise to an emotion—anxiety.</p>
+                                    </div>
+                                </div>
+
+                                <!-- 张珈宁场景 -->
+                                <div class="script-block">
+                                    <div class="mb-4">
+                                        <!-- 剪辑要求 -->
+                                        <div class="bg-clip text-white p-3 rounded-lg mb-4">
+                                            <p class="font-medium flex items-center">
+                                                <i class="fa fa-scissors mr-2"></i> 剪辑要求：画面渐隐，然后中央出现"焦躁"二字，上面有其小行英文
+                                            </p>
+                                        </div>
+
+                                        <p class="font-medium text-gray-900 dark:text-gray-100 mb-2">参演者5(张珈宁)：</p>
+                                        <p class="text-gray-700 dark:text-gray-300 mb-3">那么"焦躁"究竟源于何种情境？对我来说，当面临一件重要的社交相关的事，且不得不硬着头皮去面对时，内心就会生出十足的焦躁。</p>
+                                        <p class="text-gray-400 dark:text-gray-500 text-sm italic">So what kind of situations does "anxiety" actually stem from? For me, when facing an important social matter that I have to grit my teeth and deal with, I feel overwhelming anxiety inside.</p>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <!-- 剪辑要求 -->
+                                        <div class="bg-clip text-white p-3 rounded-lg mb-4">
+                                            <p class="font-medium flex items-center">
+                                                <i class="fa fa-scissors mr-2"></i> 剪辑要求："焦躁"二字变为"社交恐惧症"，上面小行英文跟着变，人物说到"恐惧"时开始切关联概念图，一个情绪对应一个，基本都是快切，最后一张图在人物说"还好我只是…"的时候，图片渐渐变大，最后渐隐
+                                            </p>
+                                        </div>
+
+                                        <p class="font-medium text-gray-900 dark:text-gray-100 mb-2">参演者5(张珈宁)：</p>
+                                        <p class="text-gray-700 dark:text-gray-300 mb-3">你听说过社交恐惧症吗？这是一种心理疾病，患者会对各类社交场景产生强烈的恐惧与焦虑，害怕被他人审视、评价，甚至会刻意回避社交，严重时还会影响正常生活与工作。好在我只是性格内向，不至于恶化成为一种病症。</p>
+                                        <p class="text-gray-400 dark:text-gray-500 text-sm italic">Have you heard of social anxiety disorder? It's a psychological illness. Patients experience intense fear and anxiety towards various social scenarios, fearing being scrutinized and evaluated by others. They may even deliberately avoid social interactions, and in severe cases, it can affect normal life and work. Fortunately, I'm just introverted, and it won't deteriorate into a disease.</p>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <!-- 剪辑要求 -->
+                                        <div class="bg-clip text-white p-3 rounded-lg mb-4">
+                                            <p class="font-medium flex items-center">
+                                                <i class="fa fa-scissors mr-2"></i> 剪辑要求：屏幕中央出现"心理医生"二字，上面有其小行英文
+                                            </p>
+                                        </div>
+
+                                        <p class="font-medium text-gray-900 dark:text-gray-100 mb-2">参演者5(张珈宁)：</p>
+                                        <p class="text-gray-700 dark:text-gray-300 mb-3">为应对这类症状及其他心理疾病，心理医生这一职业应运而生。</p>
+                                        <p class="text-gray-400 dark:text-gray-500 text-sm italic">To address such symptoms and other psychological illnesses, the profession of psychologist emerged as the times require.</p>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <!-- 剪辑要求 -->
+                                        <div class="bg-clip text-white p-3 rounded-lg mb-4">
+                                            <p class="font-medium flex items-center">
+                                                <i class="fa fa-scissors mr-2"></i> 剪辑要求：将心理医生相关的图加入，每张照片有一定时长，直至说完话后，作画面渐隐处理
+                                            </p>
+                                        </div>
+
+                                        <p class="font-medium text-gray-900 dark:text-gray-100 mb-2">参演者5(张珈宁)：</p>
+                                        <p class="text-gray-700 dark:text-gray-300 mb-3">他们医治的并非患者的肉体伤残，而是守护人们的心理健康。当人们意识到自己可能患有这类心理疾病时，便可寻求心理医生的帮助；即便没有达到病症的程度，若存在各类心理困扰，也同样可以向他们咨询求助。</p>
+                                        <p class="text-gray-400 dark:text-gray-500 text-sm italic">What they treat is not the physical injuries of patients, but the protection of people's mental health. When people realize they may be suffering from such psychological illnesses, they can seek help from psychologists; even if it doesn't reach the level of a disease, if there are various psychological troubles, they can also consult and seek help from them.</p>
+                                    </div>
+                                </div>
+
+                                <!-- 张雨霆双向场景 -->
+                                <div class="script-block">
+                                    <div class="mb-4">
+                                        <!-- 剪辑要求 -->
+                                        <div class="bg-clip text-white p-3 rounded-lg mb-4">
+                                            <p class="font-medium flex items-center">
+                                                <i class="fa fa-scissors mr-2"></i> 剪辑要求：屏幕中央出现 "双向" 二字，上面有其小行英文 "Bipolar Disorder"，字体由淡渐浓，背景由黑色到冷色调渐变（浅蓝到浅紫过渡）
+                                            </p>
+                                        </div>
+
+                                        <p class="font-medium text-gray-900 dark:text-gray-100 mb-2">参演者1(张雨霆)：</p>
+                                        <p class="text-gray-700 dark:text-gray-300 mb-3">此外，双向你可否有了解过？</p>
+                                        <p class="text-gray-400 dark:text-gray-500 text-sm italic">In addition, have you ever understood "Bipolar Disorder"?</p>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <!-- 剪辑要求 -->
+                                        <div class="bg-clip text-white p-3 rounded-lg mb-4">
+                                            <p class="font-medium flex items-center">
+                                                <i class="fa fa-scissors mr-2"></i> 剪辑要求："双向" 二字拆解为左右两部分，左侧浮现 "躁狂期" 图标（上扬的心跳线 + 太阳符号）及英文，右侧浮现 "抑郁期" 图标（下沉的心跳线 + 月亮符号）及英文，中间用双向箭头动态连接
+                                            </p>
+                                        </div>
+
+                                        <p class="font-medium text-gray-900 dark:text-gray-100 mb-2">参演者1(张雨霆)：</p>
+                                        <p class="text-gray-700 dark:text-gray-300 mb-3">这里说的 "双向"，并非简单的人际互动，而是一种常见的心理疾病 —— 双相情感障碍。患者会在两种极端情绪状态间交替切换，呈现 "躁狂" 与 "抑郁" 的双向波动。</p>
+                                        <p class="text-gray-400 dark:text-gray-500 text-sm italic">The "bipolar" mentioned here is not a simple interpersonal interaction, but a common psychological illness—Bipolar Disorder. Patients will alternate between two extreme emotional states, showing a two-way fluctuation between "mania" and "depression".</p>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <!-- 剪辑要求 -->
+                                        <div class="bg-clip text-white p-3 rounded-lg mb-4">
+                                            <p class="font-medium flex items-center">
+                                                <i class="fa fa-scissors mr-2"></i> 剪辑要求：分屏对比画面 —— 左屏（躁狂期）：快速剪辑的动态场景，人物语速加快、动作活跃，背景亮度偏高，配轻快音效；右屏（抑郁期）：慢镜头静态场景，人物眼神低落、动作迟缓，背景偏暗，配低沉环境音
+                                            </p>
+                                        </div>
+
+                                        <!-- 人物动作 -->
+                                        <div class="bg-secondary/10 dark:bg-secondary/20 border-l-4 border-secondary p-3 rounded-r-lg mb-4">
+                                            <p class="font-medium text-secondary dark:text-secondary">注脚部分：这块由奕辰来演</p>
+                                        </div>
+
+                                        <p class="font-medium text-gray-900 dark:text-gray-100 mb-2">参演者1(张雨霆)：</p>
+                                        <p class="text-gray-700 dark:text-gray-300 mb-3">躁狂期时，可能会出现情绪异常高涨、精力过剩、盲目乐观，甚至冲动消费、熬夜不休的状态；而抑郁期则会陷入持续低落、兴趣减退、自责自卑，连日常小事都难以完成。</p>
+                                        <p class="text-gray-400 dark:text-gray-500 text-sm italic">During the manic phase, one may experience abnormally elevated mood, excess energy, blind optimism, and even impulsive spending or staying up all night; while during the depressive phase, one will fall into persistent low mood, decreased interest, self-blame and inferiority, making it difficult to complete even daily trivial matters.</p>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <!-- 剪辑要求 -->
+                                        <div class="bg-clip text-white p-3 rounded-lg mb-4">
+                                            <p class="font-medium flex items-center">
+                                                <i class="fa fa-scissors mr-2"></i> 剪辑要求：分屏逐渐融合为单一画面，中央出现 "早发现・早干预" 中英文，背景渐变为暖色调，叠加轻微的光晕特效
+                                            </p>
+                                        </div>
+
+                                        <p class="font-medium text-gray-900 dark:text-gray-100 mb-2">参演者1(张雨霆)：</p>
+                                        <p class="text-gray-700 dark:text-gray-300 mb-3">这种情绪的剧烈摇摆，会严重影响患者的生活与社交。但它并非不可治愈，通过专业心理治疗与规范药物干预，多数患者都能恢复正常的情绪节律。</p>
+                                        <p class="text-gray-400 dark:text-gray-500 text-sm italic">This severe swing of emotions will seriously affect the patient's life and social interactions. But it is not incurable—with professional psychological treatment and standardized medication intervention, most patients can restore a normal emotional rhythm.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 片尾三言 -->
+                        <div class="script-section">
+                            <div class="pl-10 space-y-8">
+                                <!-- 王浩平结尾 -->
+                                <div class="script-block">
+                                    <div class="mb-4">
+                                        <!-- 剪辑要求 -->
+                                        <div class="bg-clip text-white p-3 rounded-lg mb-4">
+                                            <p class="font-medium flex items-center">
+                                                <i class="fa fa-scissors mr-2"></i> 剪辑要求："早发现・早干预" 的暖色调光晕逐渐扩散，覆盖全屏后缓慢淡化，画面过渡为柔和的日常场景 —— 阳光透过窗户洒在翻开的书籍上，镜头缓慢推近，书籍页面浮现 "心理认知" 四字水印
+                                            </p>
+                                        </div>
+
+                                        <p class="font-medium text-gray-900 dark:text-gray-100 mb-2">旁白(王浩平)：</p>
+                                        <p class="text-gray-700 dark:text-gray-300 mb-3">从基础层面到具体现象，再到双相情感障碍这样的特殊情况，心理世界的复杂与多元，我们才刚刚触及。</p>
+                                        <p class="text-gray-400 dark:text-gray-500 text-sm italic">From the basic level to specific phenomena, and then to special cases like Bipolar Disorder, we have only just touched the complexity and diversity of the psychological world.</p>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <!-- 剪辑要求 -->
+                                        <div class="bg-clip text-white p-3 rounded-lg mb-4">
+                                            <p class="font-medium flex items-center">
+                                                <i class="fa fa-scissors mr-2"></i> 剪辑要求：镜头拉远，画面中融入之前出现的 "情绪""认知""行为""双相" 等核心关键词的动态虚影，随镜头移动缓慢旋转汇聚
+                                            </p>
+                                        </div>
+
+                                        <p class="font-medium text-gray-900 dark:text-gray-100 mb-2">旁白(王浩平)：</p>
+                                        <p class="text-gray-700 dark:text-gray-300 mb-3">理解心理，不是为了给自我或他人贴标签，而是为了更温柔地接纳差异，更清醒地应对困扰。</p>
+                                        <p class="text-gray-400 dark:text-gray-500 text-sm italic">Understanding psychology is not about labeling oneself or others, but about accepting differences more gently and dealing with troubles more clearly.</p>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <!-- 剪辑要求 -->
+                                        <div class="bg-clip text-white p-3 rounded-lg mb-4">
+                                            <p class="font-medium flex items-center">
+                                                <i class="fa fa-scissors mr-2"></i> 剪辑要求：关键词虚影逐渐凝聚为 "关照心灵" 中英文，背景切换为多个不同人群微笑的模糊剪影叠加，暖光逐渐增强，画面渐亮后淡出
+                                            </p>
+                                        </div>
+
+                                        <!-- 人物动作 -->
+                                        <div class="bg-secondary/10 dark:bg-secondary/20 border-l-4 border-secondary p-3 rounded-r-lg mb-4">
+                                            <p class="font-medium text-secondary dark:text-secondary">注脚部分：基本都有出镜</p>
+                                        </div>
+
+                                        <p class="font-medium text-gray-900 dark:text-gray-100 mb-2">旁白(王浩平)：</p>
+                                        <p class="text-gray-700 dark:text-gray-300 mb-3">愿我们都能保持对心理世界的好奇与敬畏，关照自己，也温暖他人。这趟心理认知之旅，未完待续。</p>
+                                        <p class="text-gray-400 dark:text-gray-500 text-sm italic">May we all maintain curiosity and awe for the psychological world, take care of ourselves, and warm others. This journey of psychological cognition is to be continued.</p>
+                                    </div>
+                                </div>
+
+                                <!-- 片尾彩蛋 -->
+                                <div class="script-section">
+                                    <h3 class="text-xl font-semibold mb-4 text-center border-b-2 border-gray-300 dark:border-gray-600 pb-2 w-32 mx-auto">
+                                        片尾彩蛋
+                                    </h3>
+                                </div>
+                                <div class="script-block">
+                                    <div class="mb-4">
+                                        <!-- 人物动作 -->
+                                        <div class="bg-secondary/10 dark:bg-secondary/20 border-l-4 border-secondary p-3 rounded-r-lg mb-4">
+                                            <p class="font-medium text-secondary dark:text-secondary">注脚部分：校园内拍摄，主视角是浩平</p>
+                                        </div>
+
+                                        <p class="font-medium text-gray-900 dark:text-gray-100 mb-2">王浩平：</p>
+                                        <p class="text-gray-700 dark:text-gray-300 mb-3">杀青了啊，二位还想说什么吗？</p>
+                                        <p class="text-gray-400 dark:text-gray-500 text-sm italic">It's a wrap! Do you two have anything else to say?</p>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <p class="font-medium text-gray-900 dark:text-gray-100 mb-2">张雨霆：</p>
+                                        <p class="text-gray-700 dark:text-gray-300 mb-3">我是没什么想说的，但总归拍完后…轻松了很多</p>
+                                        <p class="text-gray-400 dark:text-gray-500 text-sm italic">I don't have much to add, but after all... I feel so much more relaxed now that we've finished filming.</p>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <p class="font-medium text-gray-900 dark:text-gray-100 mb-2">李奕辰：</p>
+                                        <p class="text-gray-700 dark:text-gray-300 mb-3">还能说什么…就感觉自己像是，完成了一项任务？一个目标？不过说其实你让我演"双向"那部分，我那神态演绎，感觉我快跟个老戏骨差不多了哈哈...</p>
+                                        <p class="text-gray-400 dark:text-gray-500 text-sm italic">What else can I say... It just feels like I've crossed off a task? Achieved a goal? Though honestly when you asked me to act out that "Bipolar Disorder" part, I mean the psychological one, my facial expressions and demeanor were almost on par with a seasoned actor, haha...</p>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <!-- 剪辑要求 -->
+                                        <div class="bg-clip text-white p-3 rounded-lg mb-4">
+                                            <p class="font-medium flex items-center">
+                                                <i class="fa fa-scissors mr-2"></i> 剪辑要求：人物说完话后画面渐隐
+                                            </p>
+                                        </div>
+
+                                        <p class="font-medium text-gray-900 dark:text-gray-100 mb-2">王浩平：</p>
+                                        <p class="text-gray-700 dark:text-gray-300 mb-3">哈哈…其实就相当于完成了一项任务，减轻了一个负担，而在完成后也都能得以放松下身心，一种"了却繁事一身轻"的感觉，这便是我们幕后的心理变化…可能也不止我们会有这样的心理变化吧？额…不过我觉得还是有人会有同感的哈哈。</p>
+                                        <p class="text-gray-400 dark:text-gray-500 text-sm italic">Haha... Actually, it's just like finishing a task and lifting a burden off my shoulders. After getting it done, I can finally relax both physically and mentally. It's that feeling of relief after wrapping up all the hassle. That's the psychological change we behind the scenes go through. Maybe it's not just us who feel this way? Uh... But I think there must be others who can relate, haha.</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -187,7 +686,7 @@
                             <ul class="space-y-2 text-gray-700 dark:text-gray-300">
                                 <li class="flex items-start">
                                     <i class="fa fa-check-circle text-primary mt-1 mr-2"></i>
-                                    <span>导演/剪辑/旁白/字幕/音频搭配</span>
+                                    <span>导演/副剪辑/旁白/字幕/音频搭配/拍摄/参与拍摄</span>
                                 </li>
                             </ul>
                         </div>
@@ -205,7 +704,7 @@
                             <ul class="space-y-2 text-gray-700 dark:text-gray-300">
                                 <li class="flex items-start">
                                     <i class="fa fa-check-circle text-primary mt-1 mr-2"></i>
-                                    <span>剪辑/拍摄/参与拍摄</span>
+                                    <span>主剪辑/拍摄/参与拍摄</span>
                                 </li>
                             </ul>
                         </div>
@@ -284,6 +783,27 @@
                             
                             <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-5 card-hover">
                                 <div class="flex flex-wrap items-center justify-between mb-3">
+                                    <h3 class="font-bold text-lg">剧本全面更换</h3>
+                                    <span class="text-gray-500 dark:text-gray-400 text-sm bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full mt-2 md:mt-0">
+                                        <i class="fa fa-calendar-o mr-1"></i> 2025年11月15日
+                                    </span>
+                                </div>
+                                <div class="space-y-3 text-gray-700 dark:text-gray-300">
+                                    <li>完全更换剧本主题与内容</li>
+                                    <li>减少总台词字数</li>
+                                    <li>基本均衡了每人的台词总量</li>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="log-entry relative pl-8 animate-slide-up" style="animation-fill-mode: both; animation-timing-function: ease-out;">
+                            <!-- 时间轴点 -->
+                            <div class="absolute left-0 top-0 w-4 h-4 rounded-full bg-primary border-4 border-primary/20"></div>
+                            <!-- 时间轴线 -->
+                            <div class="absolute left-2 top-4 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-700"></div>
+                            
+                            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-5 card-hover">
+                                <div class="flex flex-wrap items-center justify-between mb-3">
                                     <h3 class="font-bold text-lg">剧本情景所需物调整</h3>
                                     <span class="text-gray-500 dark:text-gray-400 text-sm bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full mt-2 md:mt-0">
                                         <i class="fa fa-calendar-o mr-1"></i> 2025年10月5日
@@ -349,13 +869,38 @@
                     </h2>
                     
                     <div class="space-y-8">
-                        <!-- 版本1.2 -->
+                        <!-- 版本1.3 -->
                         <div class="update-timeline relative pl-8 pb-8 animate-slide-up">
                             <!-- 时间轴点 -->
                             <div class="absolute left-0 top-0 w-4 h-4 rounded-full bg-primary border-4 border-primary/20"></div>
                             <!-- 时间轴线 -->
                             <div class="absolute left-2 top-4 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-700"></div>
                             
+                            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-5 card-hover">
+                                <div class="flex flex-wrap items-center justify-between mb-3">
+                                    <h3 class="font-bold text-lg text-primary">版本 1.3</h3>
+                                    <span class="text-gray-500 dark:text-gray-400 text-sm bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full mt-2 md:mt-0">
+                                        <i class="fa fa-calendar-o mr-1"></i> 2025年11月15日
+                                    </span>
+                                </div>
+                                
+                                <div class="space-y-3 text-gray-700 dark:text-gray-300">
+                                    <h4 class="font-semibold">主要更新内容：</h4>
+                                    <ul class="list-disc pl-6 space-y-2">
+                                        <li>新增音乐播放按钮，其为网站的背景音乐</li>
+                                        <li>新增【心剧附件】功能分区</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        
+                        </div>
+                        <!-- 版本1.2 -->
+                        <div class="update-timeline relative pl-8 pb-8 animate-slide-up">
+                            <!-- 时间轴点 -->
+                            <div class="absolute left-0 top-0 w-4 h-4 rounded-full bg-primary border-4 border-primary/20"></div>
+                            <!-- 时间轴线 -->
+                            <div class="absolute left-2 top-4 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-700"></div>
+
                             <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-5 card-hover">
                                 <div class="flex flex-wrap items-center justify-between mb-3">
                                     <h3 class="font-bold text-lg text-primary">版本 1.2</h3>
@@ -429,8 +974,114 @@
                     </div>
                 </div>
             </section>
+
+            <!-- 心剧附件区域（默认隐藏） -->
+            <section id="attachment-region" class="region-content hidden animate-fade-in">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 md:p-8 mb-8 transform transition-custom hover:shadow-lg" style="transform: translateZ(0);">
+                    <h2 class="text-2xl font-bold mb-6 text-primary dark:text-primary border-b border-gray-200 dark:border-gray-700 pb-3">
+                        心剧附件
+                    </h2>
+                    
+                    <div class="space-y-6">
+                        <!-- 说明文字 -->
+                        <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                            <p class="text-gray-700 dark:text-gray-300 text-left">
+                                剧本网站偶尔会有无法正常显示情况，如有必要可以通过单击下方区块，跳转到123云盘获取相关资源
+                            </p>
+                        </div>
+                        
+                        <!-- 跳转块 -->
+                        <div class="flex justify-center">
+                            <a href="#" id="attachment-link" target="_blank" class="block w-full max-w-md">
+                                <div class="bg-primary hover:bg-primary/90 text-white rounded-lg p-6 text-center transition-all duration-300 transform hover:scale-105 hover:shadow-xl cursor-pointer">
+                                    <i class="fa fa-external-link text-3xl mb-3"></i>
+                                    <p class="text-lg font-semibold">点击跳转至123云盘</p>
+                                    <p class="text-sm opacity-90 mt-2">获取相关资源文件</p>
+                                </div>
+                            </a>
+                        </div>
+                        
+                        <!-- 文件数量统计 -->
+                        <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-6">
+                            <h3 class="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">
+                                <i class="fa fa-file-text-o mr-2"></i>文件统计
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center">
+                                            <div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mr-3">
+                                                <i class="fa fa-headphones text-blue-600 dark:text-blue-400"></i>
+                                            </div>
+                                            <div>
+                                                <p class="font-medium text-gray-800 dark:text-gray-200">音频文件</p>
+                                                <p class="text-sm text-gray-500 dark:text-gray-400">Audio Files</p>
+                                            </div>
+                                        </div>
+                                        <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">1</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center">
+                                            <div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mr-3">
+                                                <i class="fa fa-file-pdf-o text-red-600 dark:text-red-400"></i>
+                                            </div>
+                                            <div>
+                                                <p class="font-medium text-gray-800 dark:text-gray-200">PDF文件</p>
+                                                <p class="text-sm text-gray-500 dark:text-gray-400">PDF Files</p>
+                                            </div>
+                                        </div>
+                                        <div class="text-2xl font-bold text-red-600 dark:text-red-400">1</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </div>
     </main>
+
+    <!-- 音乐播放弹出块 -->
+    <div id="music-player" class="fixed bottom-4 right-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 w-80 opacity-0 pointer-events-none transition-opacity duration-200 z-50 border border-gray-200 dark:border-gray-700">
+        <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center">
+                <div class="w-10 h-10 rounded-full bg-primary/20 dark:bg-primary/30 flex items-center justify-center mr-3">
+                    <i class="fa fa-music text-primary"></i>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-gray-800 dark:text-gray-200">心律 Rhythm of Heart</h4>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">此音乐由人工智能生成</p>
+                </div>
+            </div>
+            <button id="close-music-player" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                <i class="fa fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="flex items-center space-x-3">
+            <button id="play-pause-btn" class="w-10 h-10 rounded-full bg-primary hover:bg-primary/90 text-white flex items-center justify-center transition-colors">
+                <i class="fa fa-play"></i>
+            </button>
+            <div class="flex-1">
+                <div class="bg-gray-200 dark:bg-gray-700 rounded-full h-2 relative">
+                    <div id="progress-bar" class="bg-primary h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+                <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    <span id="current-time">0:00</span>
+                    <span id="total-time">0:00</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 隐藏的音频元素 -->
+        <audio id="audio-element" preload="metadata">
+            <source src="./心律 Rhythm of Heart.mp3" type="audio/mpeg">
+            您的浏览器不支持音频播放。
+        </audio>
+    </div>
 
     <!-- 页脚 -->
     <footer class="bg-gray-100 dark:bg-gray-800 py-6 transition-custom">
@@ -466,6 +1117,7 @@
         // 区域切换功能
         const regionBtns = document.querySelectorAll('.region-btn');
         const regionContents = document.querySelectorAll('.region-content');
+        const readToggle = document.getElementById('read-toggle');
 
         // 添加CSS类用于动画管理
         const style = document.createElement('style');
@@ -527,6 +1179,16 @@
                                     setTimeout(() => {
                                         targetRegion.classList.add('fade-in');
                                         targetRegion.classList.remove('fade-out');
+                                        
+                                        // 控制中英朗读按钮的显示/隐藏
+                                        if (targetRegionId === 'script-region') {
+                                            readToggle.classList.remove('hidden');
+                                        } else {
+                                            readToggle.classList.add('hidden');
+                                            // 停止所有朗读音频
+                                            stopChineseAudio();
+                                            stopEnglishAudio();
+                                        }
                                     }, 10);
                                 });
                             }, 300); // 与transition时长匹配
@@ -536,11 +1198,209 @@
             });
         });
         
-        // 初始化显示的区域
+        // 初始化显示的区域和中英朗读按钮状态
         const visibleRegion = document.querySelector('.region-content:not(.hidden)');
         if (visibleRegion) {
             visibleRegion.classList.add('fade-in');
+            // 如果初始显示的是剧本内容区域，则显示朗读按钮
+            if (visibleRegion.id === 'script-region') {
+                readToggle.classList.remove('hidden');
+            }
         }
+
+        // 音乐播放器功能
+        const musicToggle = document.getElementById('music-toggle');
+        const musicPlayer = document.getElementById('music-player');
+        const closeMusicPlayer = document.getElementById('close-music-player');
+        const playPauseBtn = document.getElementById('play-pause-btn');
+        const audioElement = document.getElementById('audio-element');
+        const progressBar = document.getElementById('progress-bar');
+        const currentTimeEl = document.getElementById('current-time');
+        const totalTimeEl = document.getElementById('total-time');
+        const musicStatusIndicator = document.getElementById('music-status-indicator');
+
+        let isPlaying = false;
+
+        // 格式化时间
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // 更新进度条
+        function updateProgress() {
+            const progress = (audioElement.currentTime / audioElement.duration) * 100;
+            progressBar.style.width = progress + '%';
+            currentTimeEl.textContent = formatTime(audioElement.currentTime);
+        }
+
+        // 音乐播放/暂停
+        function toggleMusic() {
+            if (isPlaying) {
+                audioElement.pause();
+                playPauseBtn.innerHTML = '<i class="fa fa-play"></i>';
+                musicToggle.classList.remove('playing');
+                // 切换状态指示器为绿色
+                musicStatusIndicator.classList.remove('bg-red-500');
+                musicStatusIndicator.classList.add('bg-green-500');
+                musicStatusIndicator.querySelector('div').classList.remove('bg-red-500');
+                musicStatusIndicator.querySelector('div').classList.add('bg-green-500');
+                isPlaying = false;
+            } else {
+                audioElement.play().catch(e => {
+                    console.error('音频播放失败:', e);
+                    // 唉呀，编码主编码主，有个错误出现了哦，音频播放失败了！
+                });
+                playPauseBtn.innerHTML = '<i class="fa fa-pause"></i>';
+                musicToggle.classList.add('playing');
+                // 切换状态指示器为红色
+                musicStatusIndicator.classList.remove('bg-green-500');
+                musicStatusIndicator.classList.add('bg-red-500');
+                musicStatusIndicator.querySelector('div').classList.remove('bg-green-500');
+                musicStatusIndicator.querySelector('div').classList.add('bg-red-500');
+                isPlaying = true;
+            }
+        }
+
+        // 显示音乐播放器
+        musicToggle.addEventListener('click', () => {
+            musicPlayer.classList.add('music-player-visible');
+            // 如果音乐没有在播放，则开始播放
+            if (!isPlaying) {
+                toggleMusic();
+            }
+        });
+
+        // 关闭播放器
+        closeMusicPlayer.addEventListener('click', () => {
+            musicPlayer.classList.remove('music-player-visible');
+            // 不停止音乐播放，只隐藏界面
+        });
+
+        // 播放/暂停按钮
+        playPauseBtn.addEventListener('click', toggleMusic);
+
+        // 音频元数据加载完成
+        audioElement.addEventListener('loadedmetadata', () => {
+            totalTimeEl.textContent = formatTime(audioElement.duration);
+        });
+
+        // 音频时间更新
+        audioElement.addEventListener('timeupdate', updateProgress);
+
+        // 音频播放结束
+        audioElement.addEventListener('ended', () => {
+            // 自动重新播放
+            audioElement.currentTime = 0;
+            audioElement.play().catch(e => {
+                console.error('音频重新播放失败:', e);
+                // 如果重新播放失败，则停止播放状态
+                playPauseBtn.innerHTML = '<i class="fa fa-play"></i>';
+                musicToggle.classList.remove('playing');
+                // 切换状态指示器为绿色
+                musicStatusIndicator.classList.remove('bg-red-500');
+                musicStatusIndicator.classList.add('bg-green-500');
+                musicStatusIndicator.querySelector('div').classList.remove('bg-red-500');
+                musicStatusIndicator.querySelector('div').classList.add('bg-green-500');
+                isPlaying = false;
+                progressBar.style.width = '0%';
+                currentTimeEl.textContent = '0:00';
+            });
+        });
+
+        // 点击进度条跳转
+        progressBar.parentElement.addEventListener('click', (e) => {
+            const rect = progressBar.parentElement.getBoundingClientRect();
+            const percent = (e.clientX - rect.left) / rect.width;
+            audioElement.currentTime = percent * audioElement.duration;
+        });
+
+        // 中英朗读功能
+        const chineseReadBtn = document.getElementById('chinese-read-btn');
+        const englishReadBtn = document.getElementById('english-read-btn');
+        
+        // 创建音频元素
+        const chineseAudio = new Audio('./中文播报音频.mp3');
+        const englishAudio = new Audio('./英文播报音频.mp3');
+        
+        let isChinesePlaying = false;
+        let isEnglishPlaying = false;
+
+        // 中文朗读功能
+        function toggleChineseAudio() {
+            if (isChinesePlaying) {
+                stopChineseAudio();
+            } else {
+                // 停止英文音频
+                stopEnglishAudio();
+                // 播放中文音频
+                chineseAudio.play().catch(e => {
+                    console.error('中文音频播放失败:', e);
+                    // 唉呀，编码主编码主，有个错误出现了哦，中文音频播放失败了！
+                });
+                isChinesePlaying = true;
+                chineseReadBtn.classList.add('active');
+            }
+        }
+
+        function stopChineseAudio() {
+            chineseAudio.pause();
+            chineseAudio.currentTime = 0;
+            isChinesePlaying = false;
+            chineseReadBtn.classList.remove('active');
+        }
+
+        // 英文朗读功能
+        function toggleEnglishAudio() {
+            if (isEnglishPlaying) {
+                stopEnglishAudio();
+            } else {
+                // 停止中文音频
+                stopChineseAudio();
+                // 播放英文音频
+                englishAudio.play().catch(e => {
+                    console.error('英文音频播放失败:', e);
+                    // 唉呀，编码主编码主，有个错误出现了哦，英文音频播放失败了！
+                });
+                isEnglishPlaying = true;
+                englishReadBtn.classList.add('active');
+            }
+        }
+
+        function stopEnglishAudio() {
+            englishAudio.pause();
+            englishAudio.currentTime = 0;
+            isEnglishPlaying = false;
+            englishReadBtn.classList.remove('active');
+        }
+
+        // 按钮事件监听
+        chineseReadBtn.addEventListener('click', toggleChineseAudio);
+        englishReadBtn.addEventListener('click', toggleEnglishAudio);
+
+        // 音频播放结束事件
+        chineseAudio.addEventListener('ended', () => {
+            stopChineseAudio();
+        });
+
+        englishAudio.addEventListener('ended', () => {
+            stopEnglishAudio();
+        });
+
+        // 页面卸载时停止所有音频
+        window.addEventListener('beforeunload', () => {
+            stopChineseAudio();
+            stopEnglishAudio();
+        });
+
+        // 心剧附件链接设置 - 在这里修改你的123网盘链接
+        document.addEventListener('DOMContentLoaded', () => {
+            const attachmentLink = document.getElementById('attachment-link');
+            // TODO: 请在这里替换为实际的123网盘链接
+            const your123PanLink = "https://www.123865.com/s/d484jv-kPMXv"; // 预留链接位置
+            attachmentLink.setAttribute('href', your123PanLink);
+        });
     </script>
 </body>
 </html>
